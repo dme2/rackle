@@ -1,0 +1,4 @@
+# login info for rsync
+server="157.245.137.107"
+user="dave"
+path="/home/dave/www/"
