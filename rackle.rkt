@@ -7,8 +7,10 @@
 
 #lang racket
 (require racket/cmdline)
+(require racket/date)
 (require commonmark)
 (require toml)
+(require splitflap)
 
 (define post-mode (make-parameter #f))
 
@@ -133,6 +135,20 @@ src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX
 (define (to-html-list li)
   (string-append "\n<ul>\n" (string-append* (map to-list-el li)) "\n</ul>\n"))
 
+(define (get-title post)
+  (let ((post-name (get-post-name post)))
+    (string-titlecase (string-replace post-name "-" " "))))
+
+(define (get-contents post)
+  (file->string post))
+
+(define (get-posts in-path)
+   (let* ((posts-path (string-append-paths in-path "/_site/posts"))
+		 (dir-list (directory-list (string->path posts-path)))
+		 (dir-path-list (map (curry string-append (path->string in-path) "/_site/posts/")
+				     (map path->string dir-list))))
+     dir-path-list))
+
 (define (get-post-list in-path)
   (let* ((posts-path (string-append-paths in-path "/_site/posts"))
 		 (dir-list (directory-list (string->path posts-path)))
@@ -168,11 +184,54 @@ src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX
 		(idx-string (string-append html-header posts html-footer)))
 	(display idx-string idx-file)))
 
-(define (create-site in-path)
+;; (define my-items
+;;    (list
+;;     (feed-item
+;;      (append-specific my-id "first-post")         ; item-specific ID
+;;      "https://example.com/first-post.html"        ; URL
+;;      "Chaucer, Rabelais and Balzac"               ; title
+;;      (person "Marian Paroo" "marian@example.com") ; author
+;;      (infer-moment "1912-06-21")                  ; publish date
+;;      (infer-moment "1912-06-21")                  ; updated date
+;;      '(article (p "My first post; content TK"))))
+
+(define (build-item url author email id post)
+  (list
+   (feed-item
+    (append-specific id (get-post-name post))
+    (string-append url "/posts/" (to-html (get-post-name post)))
+    (get-title post)
+    (person author email)
+    (infer-moment "2023-08-25") ;; todo
+    (infer-moment "2023-08-25") ;; todo
+    (file->string post)))) ;; todo
+
+(define (build-feed posts url author email id)
+  (let ((feed '() ))
+    (for ([p posts])
+      (set! feed (append feed (build-item url author email id p))))
+    feed))
+
+(define (create-rss in-path config)
+  (let* ((toml-data (parse-toml (file->string config)))
+         (url (hash-ref toml-data 'url))
+         (author (hash-ref toml-data 'author))
+         (email (hash-ref toml-data 'email))
+         (id (mint-tag-uri "dmetwo.org" "2023" "blog")) ;; todo (to-dns)
+         (posts (get-posts in-path))
+         (items (build-feed posts url author email id))
+         (out-feed (feed id url "daves blog" items))
+         (out-file (open-output-file
+                    (string->path
+                     (string-append (path->string in-path) "/_site/feed.rss")))))
+    (display (express-xml out-feed 'rss "http://dmetwo.org/feed.rss") out-file)))
+
+(define (create-site in-path config)
   (create-posts   (string->path in-path))
   (create-about   (string->path in-path))
   (create-index   (string->path in-path))
-  (create-archive (string->path in-path)))
+  (create-archive (string->path in-path))
+  (create-rss     (string->path in-path) (string->path config)))
 
 (define (run-post config-path in_path)
   (let* ((toml_data (parse-toml (file->string config-path)))
@@ -187,6 +246,6 @@ src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX
   (let ((path rackle))
     (if (equal? (post-mode) #t)
 	(run-post "config.toml" path)
-        (create-site path))))
+        (create-site path "config.toml"))))
 
 run-rackle

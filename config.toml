@@ -2,3 +2,6 @@
 server="157.245.137.107"
 user="dave"
 path="/home/dave/www/"
+url="http://dmetwo.org"
+email="dave@dmetwo.org"
+author="Dave E."
