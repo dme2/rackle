@@ -2,12 +2,14 @@
 ;; this script generates a static blog site
 ;;
 ;; TODO's
-;;   [] rss/atom feed
+;;   [x] rss/atom feed
 ;;   [] implement dullmark?
+;;   [] check for file updates before building new files
 
 #lang racket
 (require racket/cmdline)
 (require racket/date)
+(require racket/serialize)
 (require commonmark)
 (require toml)
 (require splitflap)
@@ -156,14 +158,15 @@ src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX
 				     (map path->string dir-list))))
 	(to-html-list dir-path-list)))
 
-(define (create-posts in-path)
+(define (create-posts in-path diff)
   (let* ((posts-path (string-append-paths in-path "/draft/posts"))
 		 (dir-list (directory-list (string->path posts-path)))
 		 (dir-path-list-temp (map path->string dir-list))
 		 (dir-path-list (map (curry string-append posts-path "/") dir-path-list-temp))
 		 (site-post-path (string-append-paths in-path "/_site/posts")))
 	 (map (curry convert-posts-to-path site-post-path) dir-path-list)
-   ))
+  (map (curry convert-posts-to-path site-post-path) diff)))
+   
 
 (define (create-about in-path)
   (let* ((about-path (string-append-paths in-path "/draft/about.md"))
@@ -184,16 +187,18 @@ src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX
 		(idx-string (string-append html-header posts html-footer)))
 	(display idx-string idx-file)))
 
-;; (define my-items
-;;    (list
-;;     (feed-item
-;;      (append-specific my-id "first-post")         ; item-specific ID
-;;      "https://example.com/first-post.html"        ; URL
-;;      "Chaucer, Rabelais and Balzac"               ; title
-;;      (person "Marian Paroo" "marian@example.com") ; author
-;;      (infer-moment "1912-06-21")                  ; publish date
-;;      (infer-moment "1912-06-21")                  ; updated date
-;;      '(article (p "My first post; content TK"))))
+(define (pad d)
+  (if (< (string-length d) 2)
+      (string-append "0" d)
+      d))
+
+;; returns modified date as "YYYY-MM-DD"
+(define (get-file-date file-path)
+  (let* ((dt (seconds->date (file-or-directory-modify-seconds file-path)))
+         (year (number->string (date-year dt)))
+         (month (pad (number->string (date-month dt))))
+         (day   (pad (number->string (date-day   dt)))))
+    (string-append year "-" month "-" day)))
 
 (define (build-item url author email id post)
   (list
@@ -202,9 +207,9 @@ src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX
     (string-append url "/posts/" (to-html (get-post-name post)))
     (get-title post)
     (person author email)
-    (infer-moment "2023-08-25") ;; todo
-    (infer-moment "2023-08-25") ;; todo
-    (file->string post)))) ;; todo
+    (infer-moment (get-file-date post))
+    (infer-moment (get-file-date post))
+    (file->string post))))
 
 (define (build-feed posts url author email id)
   (let ((feed '() ))
@@ -212,26 +217,76 @@ src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX
       (set! feed (append feed (build-item url author email id p))))
     feed))
 
-(define (create-rss in-path config)
+(define (create-rss in-path config diff)
   (let* ((toml-data (parse-toml (file->string config)))
          (url (hash-ref toml-data 'url))
          (author (hash-ref toml-data 'author))
          (email (hash-ref toml-data 'email))
          (id (mint-tag-uri "dmetwo.org" "2023" "blog")) ;; todo (to-dns)
-         (posts (get-posts in-path))
+         ;(posts (get-posts in-path))
+         (posts diff)
          (items (build-feed posts url author email id))
          (out-feed (feed id url "daves blog" items))
+         ; #:exists 'replace))
          (out-file (open-output-file
                     (string->path
-                     (string-append (path->string in-path) "/_site/feed.rss")))))
-    (display (express-xml out-feed 'rss "http://dmetwo.org/feed.rss") out-file)))
+                     (string-append (path->string in-path) "/_site/feed.rss")) #:exists 'replace)))
+    (display (express-xml out-feed 'rss "http://dmetwo.org/feed.rss") out-file))) ;; todo
+
+;; hash is formatted as:
+;; key(file_name) : values (last_updated_date . contents)
+
+(define (get-draft-posts in-path)
+  (let* ((posts-path (string-append-paths in-path "/draft/posts"))
+		 (dir-list (directory-list (string->path posts-path)))
+		 (dir-path-list-temp (map path->string dir-list))
+		 (dir-path-list (map (curry string-append posts-path "/") dir-path-list-temp)))
+    dir-path-list))
+  
+(define (make-new-hash in-path)
+  (let* ((posts-path (string-append-paths in-path "/draft/posts"))
+		 (dir-list (directory-list (string->path posts-path)))
+		 (dir-path-list-temp (map path->string dir-list))
+		 (dir-path-list (map (curry string-append posts-path "/") dir-path-list-temp))
+         (new-hash (make-hash)))
+    (for ([post dir-path-list])
+      (hash-set! new-hash post `(,(file-or-directory-modify-seconds post) . ,(get-contents post))))
+    new-hash))
+
+(define (get-diff-results new-site-hash old-site-hash in-path)
+  (let ((posts (get-draft-posts in-path))
+        (diff '()))
+    (for ([p posts])
+      (if (not (equal? (hash-ref new-site-hash p) (hash-ref old-site-hash p)))
+          (append diff p)
+          (append diff '())))
+    diff))
+
+(define (write-out-site-data site-data)
+  (let ((out-file (open-output-file (string->path "./site-cache.rkt"))))
+    (write (serialize site-data) out-file)))
+
+(define (check-diff in-path)
+  (if (eq? #t (file-exists? "./site-cache.rkt"))
+      (get-diff-results (make-new-hash in-path)
+                        (deserialize 
+                         (read (open-input-file "./site-cache.rkt")))
+                        in-path)
+                        ;(string->path (string-append
+                        ;               (path->string
+                        ;                in-path) "/draft")))
+      (begin (write-out-site-data
+              (make-new-hash in-path))
+             (get-draft-posts in-path))))
 
 (define (create-site in-path config)
-  (create-posts   (string->path in-path))
+  (define diff (check-diff (string->path in-path)))
+;  (check-diff     (string->path in-path))
+  (create-posts   (string->path in-path) diff)
   (create-about   (string->path in-path))
   (create-index   (string->path in-path))
   (create-archive (string->path in-path))
-  (create-rss     (string->path in-path) (string->path config)))
+  (create-rss     (string->path in-path) (string->path config) diff))
 
 (define (run-post config-path in_path)
   (let* ((toml_data (parse-toml (file->string config-path)))
