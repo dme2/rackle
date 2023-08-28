@@ -1,7 +1,7 @@
 # login info for rsync
 server="157.245.137.107"
 user="dave"
-path="/home/dave/www/"
+path="/home/dave/www/_site"
 url="http://dmetwo.org"
 email="dave@dmetwo.org"
 author="Dave E."
