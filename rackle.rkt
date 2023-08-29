@@ -4,7 +4,7 @@
 ;; TODO's
 ;;   [x] rss/atom feed
 ;;   [] implement dullmark?
-;;   [] check for file updates before building new files
+;;   [x] check for file updates before building new files
 
 #lang racket
 (require racket/cmdline)
@@ -226,21 +226,25 @@ src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX
       (set! feed (append feed (build-item url author email id p))))
     feed))
 
+(define (to-dns url)
+  (if (equal? #t (string-prefix? url "http://"))
+      (string-trim url "http://")
+      (string-trim url "https://")))
+
 (define (create-rss in-path config diff)
   (let* ((toml-data (parse-toml (file->string config)))
          (url (hash-ref toml-data 'url))
          (author (hash-ref toml-data 'author))
          (email (hash-ref toml-data 'email))
-         (id (mint-tag-uri "dmetwo.org" "2023" "blog")) ;; todo (to-dns)
-         ;(posts (get-posts in-path))
+         (id (mint-tag-uri (to-dns url) "2023" "blog"))
          (posts diff)
          (items (build-feed posts url author email id))
          (out-feed (feed id url "daves blog" items))
-         ; #:exists 'replace))
          (out-file (open-output-file
                     (string->path
-                     (string-append (path->string in-path) "/_site/feed.rss")) #:exists 'replace)))
-    (display (express-xml out-feed 'rss "http://dmetwo.org/feed.rss") out-file))) ;; todo
+                     (string-append (path->string in-path) "/_site/feed.rss"))
+                    #:exists 'replace)))
+    (display (express-xml out-feed 'rss "http://dmetwo.org/feed.rss") out-file)))
 
 ;; hash is formatted as:
 ;; key(file_name) : values (last_updated_date . contents)
