@@ -2,9 +2,8 @@
 ;; this script generates a static blog site
 ;;
 ;; TODO's
-;;   [x] rss/atom feed
 ;;   [] implement dullmark?
-;;   [x] check for file updates before building new files
+;;   [] more literate parsers
 
 #lang racket
 (require racket/cmdline)
@@ -13,6 +12,7 @@
 (require commonmark)
 (require toml)
 (require splitflap)
+(require "parsers/c-parser.rkt")
 
 (define post-mode (make-parameter #f))
 
