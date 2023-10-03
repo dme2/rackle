@@ -85,8 +85,6 @@ src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX
 </html> \
 ")
 
-
-
 (define (string-append-paths p s)
   (string-append (path->string p) s))
 
@@ -105,8 +103,10 @@ src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX
   (let ((exploded (string->list b)))
 	(find-char a exploded '())))
 
+(define (get-extension p)
+  (second (string-split p ".")))
+
 (define (get-post-name post)
-  ;(print post)
   (let ((md-name (split-at #\/ (list->string (reverse (string->list post))))))
 	(list->string (reverse (split-at #\. (list->string md-name))))))
 
@@ -114,20 +114,25 @@ src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX
   (let ((out-file (open-output-file
                    (string-append dest-path "/"
                                   (to-html (get-post-name post))) #:exists 'replace #:mode'text))
-		(doc (document->html (read-document (open-input-file post))))
-		(doc2 (write-document-html (read-document (open-input-file post)))))
+
+		(doc
+         (match (get-extension post)
+           ("md" (document->html (read-document (open-input-file post))))
+           ("cpp" (c->html post))
+           ("c" (c->html post))
+           ("cc" (c->html post)))))
+         ;(document->html (read-document (open-input-file post)))))
+		;(doc2 (write-document-html (read-document (open-input-file post)))))
 	(display (string-append html-post-header doc html-post-footer) out-file)
-	;(write-document-html (read-document (open-input-file post)) out-file)
 	(close-output-port out-file)))
 
 (define (convert-about-to-path dest-path post)
   (let ((out-file (open-output-file
                    (string-append dest-path "/"
                                   (to-html (get-post-name post))) #:exists 'replace #:mode'text))
-		(doc (document->html (read-document (open-input-file post))))
-		(doc2 (write-document-html (read-document (open-input-file post)))))
+		(doc (document->html (read-document (open-input-file post)))))
+		;(doc2 (write-document-html (read-document (open-input-file post)))))
 	(display (string-append html-header doc html-footer) out-file)
-	;(write-document-html (read-document (open-input-file post)) out-file)
 	(close-output-port out-file)))
 
 (define (to-link l)
@@ -248,7 +253,6 @@ src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX
 
 ;; hash is formatted as:
 ;; key(file_name) : values (last_updated_date . contents)
-
 (define (get-draft-posts in-path)
   (let* ((posts-path (string-append-paths in-path "/draft/posts"))
 		 (dir-list (directory-list (string->path posts-path)))
@@ -285,16 +289,12 @@ src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX
                         (deserialize 
                          (read (open-input-file "./site-cache.rkt")))
                         in-path)
-                        ;(string->path (string-append
-                        ;               (path->string
-                        ;                in-path) "/draft")))
       (begin (write-out-site-data
               (make-new-hash in-path))
              (get-draft-posts in-path))))
 
 (define (create-site in-path config)
   (define diff (check-diff (string->path in-path)))
-;  (check-diff     (string->path in-path))
   (create-posts   (string->path in-path) diff)
   (create-about   (string->path in-path))
   (create-index   (string->path in-path))
@@ -307,7 +307,7 @@ src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX
          (user (hash-ref toml_data 'user))
          (path (hash-ref toml_data 'path))
          (r-string (string-append "rsync -r " in_path "/_site/ " user "@" server ":" path)))
-    (print r-string)
+    ;(print r-string)
     (system r-string)))
 
 (define run-rackle

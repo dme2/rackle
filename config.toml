@@ -1,5 +1,5 @@
 # login info for rsync
-server="157.245.137.107"
+server=""
 user="dave"
 path="/home/dave/www/_site"
 url="http://dmetwo.org"

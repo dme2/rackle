@@ -1,5 +1,8 @@
 #lang racket
 
+;; TODO:
+;; make inline code (i.e. code inside /* */ work properly
+;;
 (provide c->html)
 
 (define (wrap-p text)
@@ -54,4 +57,3 @@
   (let* ((toks (string->list (file->string input)))
          (output (parse toks)))
     output))
-
