@@ -110,6 +110,10 @@ src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX
   (let ((md-name (split-at #\/ (list->string (reverse (string->list post))))))
 	(list->string (reverse (split-at #\. (list->string md-name))))))
 
+(define (get-file-name post)
+  (let ((name (split-at #\/ (list->string (reverse (string->list post))))))
+	(list->string name)))
+
 (define (convert-posts-to-path dest-path post)
   (let ((out-file (open-output-file
                    (string-append dest-path "/"
@@ -180,7 +184,7 @@ src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX
 		 (site-post-path (string-append-paths in-path "/_site/posts")))
 	 (map (curry convert-posts-to-path site-post-path) dir-path-list)
   (map (curry convert-posts-to-path site-post-path) diff)))
-   
+
 
 (define (create-about in-path)
   (let* ((about-path (string-append-paths in-path "/draft/about.md"))
@@ -259,7 +263,7 @@ src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX
 		 (dir-path-list-temp (map path->string dir-list))
 		 (dir-path-list (map (curry string-append posts-path "/") dir-path-list-temp)))
     dir-path-list))
-  
+
 (define (make-new-hash in-path)
   (let* ((posts-path (string-append-paths in-path "/draft/posts"))
 		 (dir-list (directory-list (string->path posts-path)))
@@ -286,15 +290,44 @@ src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX
 (define (check-diff in-path)
   (if (eq? #t (file-exists? "./site-cache.rkt"))
       (get-diff-results (make-new-hash in-path)
-                        (deserialize 
+                        (deserialize
                          (read (open-input-file "./site-cache.rkt")))
                         in-path)
       (begin (write-out-site-data
               (make-new-hash in-path))
              (get-draft-posts in-path))))
 
+(define (not-md? f)
+  (if (equal? "md" (get-extension f))
+       #f
+       #t))
+
+(define (not-dir? f)
+  (if (= 1 (length (string-split f ".")))
+      #f
+      #t))
+
+(define (get-etc-files in-path)
+  (let* ((path (string-append-paths in-path "/draft"))
+         (dir-list (directory-list (string->path path)))
+         (dir-path-list-temp (map path->string dir-list))
+         (dir-path-list-temp2 (filter not-md? (filter not-dir? dir-path-list-temp)))
+         (dir-path-list (map (curry string-append path "/") dir-path-list-temp2)))
+    dir-path-list))
+
+(define (move-file dest src)
+  (let* ((file-name (get-file-name src))
+         (dest-name (string-append dest "/" file-name)))
+    (copy-file src dest-name)))
+
+;; copies over non .md/.html files
+(define (copy-files in-path)
+  (let((file-list (get-etc-files in-path)))
+    (map (curry move-file (string-append-paths in-path "/_site")) file-list)))
+
 (define (create-site in-path config)
   (define diff (check-diff (string->path in-path)))
+  (copy-files (string->path in-path))
   (create-posts   (string->path in-path) diff)
   (create-about   (string->path in-path))
   (create-index   (string->path in-path))
