@@ -35,6 +35,11 @@
         <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"> \
         <title> Archives</title> \
         <link rel=\"stylesheet\" href=\"./css/default.css\" /> \
+<link rel=\"stylesheet\" href=\"https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css\">
+<script src=\"https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js\"></script>
+
+<script>hljs.highlightAll();</script>
+
     </head> \
     <body> \
         <header> \
@@ -274,11 +279,14 @@ src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX
       (hash-set! new-hash post `(,(file-or-directory-modify-seconds post) . ,(get-contents post))))
     new-hash))
 
+(define no-val-found
+  (lambda () "no value found"))
+
 (define (get-diff-results new-site-hash old-site-hash in-path)
   (let ((posts (get-draft-posts in-path))
         (diff '()))
     (for ([p posts])
-      (if (not (equal? (hash-ref new-site-hash p) (hash-ref old-site-hash p)))
+      (if (not (equal? (hash-ref new-site-hash p) (hash-ref old-site-hash p no-val-found)))
           (append diff p)
           (append diff '())))
     diff))
@@ -318,7 +326,7 @@ src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX
 (define (move-file dest src)
   (let* ((file-name (get-file-name src))
          (dest-name (string-append dest "/" file-name)))
-    (copy-file src dest-name)))
+    (copy-file src dest-name #:exists-ok? #t)))
 
 ;; copies over non .md/.html files
 (define (copy-files in-path)

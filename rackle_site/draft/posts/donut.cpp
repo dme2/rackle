@@ -1,5 +1,5 @@
+// A Simple C++ Coroutine Generator Example
 /*
-  Title: A Simple C++ Coroutine Generator Example
 
 Coroutines, to put it succinctly, are functions that can be paused and resumed at user defined suspension points. The coroutines in C++ are stack free, this allows for decent performance. I won't go into too much detail regarding the implementation here, you can check out these excellent resources (#1cpp_reference) (#2lewis_baker) for more details on that.
 
@@ -34,7 +34,7 @@ struct Generator {
 	  return Generator(handle_type::from_promise(*this));
 	}
 
-	// these std::suspend_always x functions control the behavior of the coro on suspensions
+	// these std::suspend_always functions control the behavior of the coro on suspensions
 	std::suspend_always initial_suspend() {return {}; }
 	std::suspend_always final_suspend() noexcept {return {};}
 
