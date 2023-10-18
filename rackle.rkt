@@ -35,11 +35,6 @@
         <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"> \
         <title> Archives</title> \
         <link rel=\"stylesheet\" href=\"./css/default.css\" /> \
-<link rel=\"stylesheet\" href=\"https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css\">
-<script src=\"https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js\"></script>
-
-<script>hljs.highlightAll();</script>
-
     </head> \
     <body> \
         <header> \
@@ -58,6 +53,12 @@
   <head> \
     <script type=\"text/javascript\"
 src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML\"></script> \
+<link rel=\"stylesheet\" href=\"https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css\"> \
+<script src=\"https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js\"></script>\
+
+<script>hljs.highlightAll();</script> \
+
+
         <meta charset=\"utf-8\"> \
         <meta http-equiv=\"x-ua-compatible\" content=\"ie=edge\"> \
         <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"> \
@@ -147,7 +148,7 @@ src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX
 (define (to-link l)
   (let* ((link (car l))
 		(name (car (cdr l))))
-	(string-append "<a href=\"" link  "\">" name "</a>")))
+	(string-append "<a href=\"" link  "\">" (string-replace name "-" " ") "</a>")))
 
 (define (split-into-link l)
   (let* ((name (get-post-name l))

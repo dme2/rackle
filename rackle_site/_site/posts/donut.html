@@ -1,10 +1,8 @@
 <!doctype html> <html lang="en">   <head>     <script type="text/javascript"
-													  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML"></script>         <meta charset="utf-8">         <meta http-equiv="x-ua-compatible" content="ie=edge">         <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML"></script> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css"> <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script> 
 
-<script>hljs.highlightAll();</script>
-	<title> Archives</title>         <link rel="stylesheet" href="../css/default.css" />     </head>     <body>         <header>             <div class="logo">                 <a href="../">~dave's blog~</a>             </div>             <nav>                  <a href="../index.html">home</a>                 <a href="../about.html">about</a>                 <a href="../archive.html">posts</a>             </nav>         </header> A Simple C++ Coroutine Generator Example<p></p><p></p><p>Coroutines, to put it succinctly, are functions that can be paused and resumed at user defined suspension points. The coroutines in C++ are stack free, this allows for decent performance. I won't go into too much detail regarding the implementation here, you can check out these excellent resources (#1cpp_reference) (#2lewis_baker) for more details on that.</p><p></p><p>So How do coroutines help us? In general, they provide a nice interface for functions that might require starting and stopping, with the function's state being maintained in between calls. Think of how a rendering callback might work in a game engine. Every iteration or tick, the rendering callback function is called which might fill in the necessary data (like object positions, lighting calculations, etc.) for drawing to a screen.</p><p></p><p>To recap, the usual use cases are asynchronous IO (networks, files, etc.) and generator functions (audio, images, etc.), which we'll be taking a look at soon.</p><p></p><p>The following example isn't perfect. It doesn't speed up execution nor does it improve readability very much, but it does show how coroutines (specifically lazy generators) can be used. The following Generator struct is part of the compiler magic necessary to use coroutines in c++. Note - the struct's name doesn't necessarily have to be "Generator", in can be anything, "Generator" just aptly describes the type of function we'll be creating.</p><p> </p><pre><code>
+        <meta charset="utf-8">         <meta http-equiv="x-ua-compatible" content="ie=edge">         <meta name="viewport" content="width=device-width, initial-scale=1">         <title> Archives</title>         <link rel="stylesheet" href="../css/default.css" />     </head>     <body>         <header>             <div class="logo">                 <a href="../">~dave's blog~</a>             </div>             <nav>                  <a href="../index.html">home</a>                 <a href="../about.html">about</a>                 <a href="../archive.html">posts</a>             </nav>         </header><h1> A Simple C++ Coroutine Generator Example</h1><p></p><p></p><p>Coroutines, to put it succinctly, are functions that can be paused and resumed at user defined suspension points. The coroutines in C++ are stack free, this allows for decent performance. I won't go into too much detail regarding the implementation here, you can check out <a href="https://en.cppreference.com/w/cpp/language/coroutines">cpp_reference</a> or <a href="https://lewissbaker.github.io/">lewis_baker's blog</a> for more details on that.</p><p></p><p>So How do coroutines help us? In general, they provide a nice interface for functions that might require starting and stopping, with the function's state being maintained in between calls. Think of how a rendering callback might work in a game engine. Every iteration or tick, the rendering callback function is called which might fill in the necessary data (like object positions, lighting calculations, etc.) for drawing to a screen.</p><p></p><p>In general the usual use cases for coroutines are asynchronous IO (networks, files, etc.) and generator functions (audio, images, etc.), which we'll be taking a look at soon.</p><p></p><p>The following example isn't perfect. It doesn't speed up execution nor does it improve readability very much, but it does show how coroutines (specifically lazy generators) can be used. The following Generator struct is part of the compiler magic necessary to use coroutines in c++. Note - the struct's name doesn't necessarily have to be "Generator", in can be anything, "Generator" just aptly describes the type of function we'll be creating.</p><p> </p><pre><code>
 #include &lt;coroutine&gt;
 #include &lt;cstdio&gt;
 #include &lt;cstdint&gt;
@@ -30,7 +28,7 @@ struct Generator {
 	  return Generator(handle_type::from_promise(*this));
 	}
 
-	// these std::suspend_always x functions control the behavior of the coro on suspensions
+	// these std::suspend_always functions control the behavior of the coro on suspensions
 	std::suspend_always initial_suspend() {return {}; }
 	std::suspend_always final_suspend() noexcept {return {};}
 
@@ -59,7 +57,7 @@ struct Generator {
 	return std::move(h_.promise().val_); // return the data
   }
 };
-</code></pre><p></p><p>The following code calculates the donuts current frame. It's lifted directly from [here] (), with a nice explanation foun [here]() </p><pre><code>
+</code></pre><p></p><p>The following code calculates the donuts current frame. It's lifted directly from <a href=" https://www.a1k0n.net/2021/01/13/optimizing-donut.html">here</a>, with a nice explanation found <a href="https://www.a1k0n.net/2011/07/20/donut-math.html">here</a> </p><pre><code>
 #define R(mul,shift,x,y) \
   _=x; \
   x -= mul*y&gt;&gt;shift; \
@@ -125,4 +123,4 @@ int main() {
   return 0;
 }
 
-</code></pre><p></p><p>  In our main function we invoke the generator inside of an infinite for loop. Calling gen() yields our desired buffer which we then print out to the console. Resulting in a rotating donut being drawn on the screen.</p><p> </p>         <footer>             Site proudly generated by rackle . <a href="../feed.rss">rss</a>         </footer>     </body> </html>
+</code></pre><p></p><p>  In our main function we invoke the generator inside of an infinite for loop. Calling gen() yields our desired buffer which we then print out to the console. Resulting in a rotating donut being drawn on the screen.</p><p> </p>         <footer>             Site proudly generated by rackle . <a href="../feed.rss">rss</a>         </footer>     </body> </html> 
