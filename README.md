@@ -1,1 +1,1 @@
-a small static web blog generator
+A small static web blog generator written in Racket
