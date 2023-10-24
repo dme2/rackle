@@ -4,6 +4,9 @@
 ;; TODO's
 ;;   [] implement dullmark?
 ;;   [] more literate parsers
+;;   [] copy over css
+;;   [] dir path list function
+;;   [] add date parsing to titles
 
 #lang racket
 (require racket/cmdline)
@@ -175,12 +178,36 @@ src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX
 				     (map path->string dir-list))))
      dir-path-list))
 
+(define (get-file-time-pairs li res)
+  (if (equal? #t (null? li))
+      res
+      (begin
+        (set! res (append res (list (cons (car li) (file-or-directory-modify-seconds (car li))))))
+        (get-file-time-pairs (cdr li) res))))
+
+(define (get-cars li res)
+  (if (equal? #t (null? li))
+      res
+      (begin
+        (set! res (append res (list (car (car li)))))
+        (get-cars (cdr li) res))))
+
+(define (sort-file-list in-path dir-list)
+  (let* ((dir-list-paths (map (curry string-append
+                                     (path->string
+                                      in-path)) dir-list))
+         (file-times (get-file-time-pairs dir-list-paths '()))
+         (sorted-list (sort file-times #:key cdr >)))
+    ;(print file-times)
+    ;(print dir-list-paths)
+    (get-cars sorted-list '())))
+
 (define (get-post-list in-path)
   (let* ((posts-path (string-append-paths in-path "/_site/posts"))
 		 (dir-list (directory-list (string->path posts-path)))
 		 (dir-path-list (map (curry string-append "/_site/posts/")
 				     (map path->string dir-list))))
-	(to-html-list dir-path-list)))
+	(to-html-list (sort-file-list in-path dir-path-list))))
 
 (define (create-posts in-path diff)
   (let* ((posts-path (string-append-paths in-path "/draft/posts"))

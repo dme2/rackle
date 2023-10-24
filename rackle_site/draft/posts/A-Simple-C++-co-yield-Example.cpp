@@ -1,13 +1,12 @@
 // A Simple C++ co-yield Example
 /*
+Coroutines, put succinctly, are functions that can be paused and resumed at user defined suspension points. This post is mostly concered with co_yield's functionality. I won't go into too much detail regarding the implementation and usage of coroutines in C++ in this post. You can check out [cpp_reference](https://en.cppreference.com/w/cpp/language/coroutines) or [lewis_baker's blog](https://lewissbaker.github.io/) for more details on that. co_yield() can be thought of as a light abstraction on co_await's functionality (see references and posts above). Calling co_yield is equivelant to calling co_await promise.yield_value(expr), which as you might suspect, yields a value.
 
-Coroutines, to put it succinctly, are functions that can be paused and resumed at user defined suspension points. The coroutines in C++ are stack free, this allows for decent performance. I won't go into too much detail regarding the implementation here, you can check out [cpp_reference](https://en.cppreference.com/w/cpp/language/coroutines) or [lewis_baker's blog](https://lewissbaker.github.io/) for more details on that.
-
-So How do coroutines help us? In general, they provide a nice interface for functions that might require starting and stopping, with the function's state being maintained in between calls. Think of how a rendering callback might work in a game engine. Every iteration or tick, the rendering callback function is called which might fill in the necessary data (like object positions, lighting calculations, etc.) for drawing to a screen.
+So how do coroutines help us? In general, they provide a nice interface for functions that might require starting and stopping, with the function's state being maintained in between calls. Think of how a rendering callback might work in a game engine. At every iteration or tick, the rendering callback function is called which returns the necessary data (like object positions, lighting calculations, etc.) for drawing to a screen. With coroutines you could avoid writing the rendering code as callback functions and instead write the code as functions that (potentially) yield values.
 
 In general the usual use cases for coroutines are asynchronous IO (networks, files, etc.) and generator functions (audio, images, etc.), which we'll be taking a look at soon.
 
-The following example isn't perfect. It doesn't speed up execution nor does it improve readability very much, but it does show how coroutines (specifically lazy generators) can be used. The following Generator struct is part of the compiler magic necessary to use coroutines in c++. Note - the struct's name doesn't necessarily have to be "Generator", in can be anything, "Generator" just aptly describes the type of function we'll be creating.
+The following example isn't perfect. It doesn't speed up execution nor does it improve readability very much, but it does show how coroutines (specifically lazy generators via co_yield) can be used. The following Generator struct is part of the compiler magic necessary to use coroutines in C++. Note - the struct's name doesn't necessarily have to be "Generator", it can be anything, "Generator" just aptly describes the type of function we'll be creating.
  */
 #include <coroutine>
 #include <cstdio>
@@ -64,7 +63,7 @@ struct Generator {
   }
 };
 /*
-The following code calculates the donuts current frame. It's lifted directly from [here] (https://www.a1k0n.net/2021/01/13/optimizing-donut.html), with a nice explanation found [here](https://www.a1k0n.net/2011/07/20/donut-math.html) */
+The following code calculates the donut's current frame. It's lifted directly from [here] (https://www.a1k0n.net/2021/01/13/optimizing-donut.html), with a nice explanation found [here](https://www.a1k0n.net/2011/07/20/donut-math.html) */
 #define R(mul,shift,x,y) \
   _=x; \
   x -= mul*y>>shift; \
@@ -74,6 +73,7 @@ The following code calculates the donuts current frame. It's lifted directly fro
   y = y*_>>10;
 
 
+// N.B. Of type Generator<T>
 Generator<int8_t*>
 get_donut_frame() {
   int8_t b[1760], z[1760];
@@ -118,7 +118,7 @@ get_donut_frame() {
 }
 
 /*
-  The co_yield(b) call is the function's suspension point. co_yield suspends the function and returns (yields) the value we pass to it. In this case, we're passing a char array filled with the donut's current frame data. By invoking the generator (calling gen()), we cause the function to execute until the suspension point. Reinvoking the generator will cause the function to continue where it left off. In this case, calling gen() will result in the function executing the rest of the code starting at the end of the loop, iterating through the loop again and pausing at the suspension point.
+The co_yield(b) call is the function's suspension point. co_yield suspends the function and returns (yields) the value we pass to it. In this case, we're passing a char array filled with the donut's current frame data. By invoking the generator (calling gen()), we cause the function to execute until the suspension point. Reinvoking the generator will cause the function to continue where it left off. Subsequent calls of gen() will result in the function executing the rest of the code starting at the end of the loop, iterating through the loop again and pausing at the suspension point.
  */
 
 int main() {
@@ -133,5 +133,5 @@ int main() {
 }
 
 /*
-  In our main function we invoke the generator inside of an infinite for loop. Calling gen() yields our desired buffer which we then print out to the console. Resulting in a rotating donut being drawn on the screen.
+In our main function we invoke the generator inside of an infinite for loop. Calling gen() yields our desired buffer which we then print out to the console. Resulting in a rotating donut being drawn on the screen.
  */
