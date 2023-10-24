@@ -5,8 +5,8 @@
     <title>daves blog</title>
     <atom:link rel="self" href="http://dmetwo.org/feed.rss" type="application/rss+xml" />
     <link>http://dmetwo.org</link>
-    <pubDate>Mon, 23 Oct 2023 21:44:54 -0500</pubDate>
-    <lastBuildDate>Mon, 23 Oct 2023 21:44:54 -0500</lastBuildDate>
+    <pubDate>Mon, 23 Oct 2023 22:47:49 -0500</pubDate>
+    <lastBuildDate>Mon, 23 Oct 2023 22:47:49 -0500</lastBuildDate>
     <generator>Racket v8.10 [cs] + splitflap v1.2 (https://racket-lang.org)</generator>
     <description>daves blog</description>
     <language>en</language>

@@ -310,7 +310,14 @@ src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX
 (define no-val-found
   (lambda () "no value found"))
 
-(define (get-diff-results new-site-hash old-site-hash in-path)
+(define (write-out-site-data site-data)
+  (print "writing out site data")
+  (let ((out-file (open-output-file (string->path "./site-cache.rkt") #:exists 'replace)))
+    (write (serialize site-data) out-file)))
+
+(define (get-diff-results new-site-hash old-site-hash in-path write?)
+  (when (equal? #t write?)
+      (write-out-site-data new-site-hash))
   (let ((posts (get-draft-posts in-path))
         (diff '()))
     (for ([p posts])
@@ -319,16 +326,12 @@ src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX
           (append diff '())))
     diff))
 
-(define (write-out-site-data site-data)
-  (let ((out-file (open-output-file (string->path "./site-cache.rkt"))))
-    (write (serialize site-data) out-file)))
-
 (define (check-diff in-path)
   (if (eq? #t (file-exists? "./site-cache.rkt"))
       (get-diff-results (make-new-hash in-path)
                         (deserialize
                          (read (open-input-file "./site-cache.rkt")))
-                        in-path)
+                        in-path #t)
       (begin (write-out-site-data
               (make-new-hash in-path))
              (get-draft-posts in-path))))
