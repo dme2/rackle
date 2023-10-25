@@ -6,7 +6,8 @@
 ;;   [] more literate parsers
 ;;   [] copy over css
 ;;   [] dir path list function
-;;   [] add date parsing to titles
+;;   [x] add date parsing to titles
+;;   [] fix rss generation
 
 #lang racket
 (require racket/cmdline)
@@ -15,9 +16,12 @@
 (require commonmark)
 (require toml)
 (require splitflap)
+(require (only-in srfi/19 string->date))
 (require "parsers/c-parser.rkt")
 
 (define post-mode (make-parameter #f))
+
+(define file-date-map (make-hash))
 
 (define rackle
   (command-line
@@ -117,7 +121,7 @@ src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX
 
 (define (get-post-name post)
   (let ((md-name (split-at #\/ (list->string (reverse (string->list post))))))
-	(list->string (reverse (split-at #\. (list->string md-name))))))
+	(first (string-split (list->string (reverse (split-at #\. (list->string md-name)))) "_"))))
 
 (define (get-file-name post)
   (let ((name (split-at #\/ (list->string (reverse (string->list post))))))
@@ -178,12 +182,16 @@ src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX
 				     (map path->string dir-list))))
      dir-path-list))
 
+(define (date->number d)
+  (string->number (string-append* (string-split d "-"))))
+
 (define (get-file-time-pairs li res)
   (if (equal? #t (null? li))
       res
       (begin
-        (set! res (append res (list (cons (car li) (file-or-directory-modify-seconds (car li))))))
-        (get-file-time-pairs (cdr li) res))))
+        (let ((fname (first (string-split (get-file-name (car li)) "."))))
+          (set! res (append res (list (cons (car li) (date->number (hash-ref file-date-map fname))))))
+          (get-file-time-pairs (cdr li) res)))))
 
 (define (get-cars li res)
   (if (equal? #t (null? li))
@@ -243,13 +251,23 @@ src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX
       (string-append "0" d)
       d))
 
+(define build-file-date-map file-path
+  (let* ((fname (first (string-split (get-file-name file-path) ".")))
+         (fdate (second (string-split fname "_"))))
+    (hash-set! file-date-map (first (string-split fname "_")) fdate)))
+
 ;; returns modified date as "YYYY-MM-DD"
 (define (get-file-date file-path)
-  (let* ((dt (seconds->date (file-or-directory-modify-seconds file-path)))
+  (let* ((fname (first (string-split (get-file-name file-path) ".")))
+         (fdate (second (string-split fname "_")))
+         (dt (seconds->date (file-or-directory-modify-seconds file-path)))
          (year (number->string (date-year dt)))
          (month (pad (number->string (date-month dt))))
          (day   (pad (number->string (date-day   dt)))))
-    (string-append year "-" month "-" day)))
+    (print fname)
+    ;(string-append year "-" month "-" day)))
+    (hash-set! file-date-map (first (string-split fname "_")) fdate)
+    fdate))
 
 (define (build-item url author email id post)
   (list
@@ -274,6 +292,7 @@ src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX
       (string-trim url "https://")))
 
 (define (create-rss in-path config diff)
+  (print "creating rss")
   (let* ((toml-data (parse-toml (file->string config)))
          (url (hash-ref toml-data 'url))
          (author (hash-ref toml-data 'author))
@@ -367,11 +386,11 @@ src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX
 (define (create-site in-path config)
   (define diff (check-diff (string->path in-path)))
   (copy-files (string->path in-path))
+  (create-rss     (string->path in-path) (string->path config) diff)
   (create-posts   (string->path in-path) diff)
   (create-about   (string->path in-path))
   (create-index   (string->path in-path))
-  (create-archive (string->path in-path))
-  (create-rss     (string->path in-path) (string->path config) diff))
+  (create-archive (string->path in-path)))
 
 (define (run-post config-path in_path)
   (let* ((toml_data (parse-toml (file->string config-path)))
