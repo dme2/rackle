@@ -8,6 +8,7 @@
 ;;   [] dir path list function
 ;;   [x] add date parsing to titles
 ;;   [] fix rss generation
+;;   [] fix site cache functionality
 
 #lang racket
 (require racket/cmdline)
@@ -251,23 +252,24 @@ src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX
       (string-append "0" d)
       d))
 
-(define build-file-date-map file-path
-  (let* ((fname (first (string-split (get-file-name file-path) ".")))
-         (fdate (second (string-split fname "_"))))
-    (hash-set! file-date-map (first (string-split fname "_")) fdate)))
+(define (build-file-date-map posts)
+  (for ([p posts])
+    (let* ((fname (first (string-split (get-file-name p) ".")))
+           (fdate (second (string-split fname "_"))))
+      (hash-set! file-date-map (first (string-split fname "_")) fdate))))
 
 ;; returns modified date as "YYYY-MM-DD"
 (define (get-file-date file-path)
-  (let* ((fname (first (string-split (get-file-name file-path) ".")))
-         (fdate (second (string-split fname "_")))
-         (dt (seconds->date (file-or-directory-modify-seconds file-path)))
-         (year (number->string (date-year dt)))
-         (month (pad (number->string (date-month dt))))
-         (day   (pad (number->string (date-day   dt)))))
-    (print fname)
+  (let* ((fname (first (string-split (get-file-name file-path) "."))))
+   ;      (fdate (second (string-split fname "_")))
+   ;      (dt (seconds->date (file-or-directory-modify-seconds file-path)))
+   ;      (year (number->string (date-year dt)))
+   ;      (month (pad (number->string (date-month dt))))
+   ;      (day   (pad (number->string (date-day   dt)))))
+    (hash-ref file-date-map fname)))
     ;(string-append year "-" month "-" day)))
-    (hash-set! file-date-map (first (string-split fname "_")) fdate)
-    fdate))
+    ;(hash-set! file-date-map (first (string-split fname "_")) fdate)
+;    fdate))
 
 (define (build-item url author email id post)
   (list
@@ -291,14 +293,20 @@ src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX
       (string-trim url "http://")
       (string-trim url "https://")))
 
+(define (get-site-posts in-path)
+  (let* ((posts-path (string-append-paths in-path "/_site/posts"))
+		 (dir-list (directory-list (string->path posts-path)))
+		 (dir-path-list-temp (map path->string dir-list))
+		 (dir-path-list (map (curry string-append posts-path "/") dir-path-list-temp)))
+    dir-path-list))
+
 (define (create-rss in-path config diff)
-  (print "creating rss")
   (let* ((toml-data (parse-toml (file->string config)))
          (url (hash-ref toml-data 'url))
          (author (hash-ref toml-data 'author))
          (email (hash-ref toml-data 'email))
          (id (mint-tag-uri (to-dns url) "2023" "blog"))
-         (posts diff)
+         (posts (get-site-posts in-path))
          (items (build-feed posts url author email id))
          (out-feed (feed id url "daves blog" items))
          (out-file (open-output-file
@@ -330,7 +338,6 @@ src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX
   (lambda () "no value found"))
 
 (define (write-out-site-data site-data)
-  (print "writing out site data")
   (let ((out-file (open-output-file (string->path "./site-cache.rkt") #:exists 'replace)))
     (write (serialize site-data) out-file)))
 
@@ -386,11 +393,12 @@ src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX
 (define (create-site in-path config)
   (define diff (check-diff (string->path in-path)))
   (copy-files (string->path in-path))
-  (create-rss     (string->path in-path) (string->path config) diff)
+  (build-file-date-map diff)
   (create-posts   (string->path in-path) diff)
   (create-about   (string->path in-path))
   (create-index   (string->path in-path))
-  (create-archive (string->path in-path)))
+  (create-archive (string->path in-path))
+  (create-rss     (string->path in-path) (string->path config) diff))
 
 (define (run-post config-path in_path)
   (let* ((toml_data (parse-toml (file->string config-path)))

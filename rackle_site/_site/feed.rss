@@ -17,56 +17,20 @@
       <author>dave@dmetwo.org (Dave E.)</author>
       <guid isPermaLink="false">tag:dmetwo.org,2023:blog.Leetcode-55-In-32-Characters-Of-BQN</guid>
       <description>
-        <![CDATA[# Leetcode 55 In 32 Characters Of BQN
+        <![CDATA[<!doctype html> <html lang="en">   <head>     <script type="text/javascript"
+src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML"></script> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css"> <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script> 
 
-Good ol' [Leetcode 55](https://leetcode.com/problems/jump-game/), a classic in the interview circuit. At first glance, it's a simple question, just simulate the game, jump from the start index to each reachable index and see if we can reach the end. This leads to an O(n^2) solution and inevitably to the follow up question: "but can you do it in linear time?".
+        <meta charset="utf-8">         <meta http-equiv="x-ua-compatible" content="ie=edge">         <meta name="viewport" content="width=device-width, initial-scale=1">         <title> Archives</title>         <link rel="stylesheet" href="../css/default.css" />     </head>     <body>         <header>             <div class="logo">                 <a href="../">~dave's blog~</a>             </div>             <nav>                  <a href="../index.html">home</a>                 <a href="../about.html">about</a>                 <a href="../archive.html">posts</a>             </nav>         </header><h1>Leetcode 55 In 32 Characters Of BQN</h1><p>Good ol' <a href="https://leetcode.com/problems/jump-game/">Leetcode 55</a>, a classic in the interview circuit. At first glance, it's a simple question, just simulate the game, jump from the start index to each reachable index and see if we can reach the end. This leads to an O(n^2) solution and inevitably to the follow up question: "but can you do it in linear time?".</p><p>This proves deceptively difficult. Deceptive because the linear solution is (like most leetcode problems) simple. But if you haven't seen similair problems (or, you already know the "trick", in that case, shhh..) you're bound to waste valuable interview time teasing out the solution. But once it strikes you (or you look it up), you'll either kick yourself for missing something so obvious or pat yourself on the back for seeing through the interviewer's ruse.</p><p>Here's the idea, it's a very basic dynamic programming solution:</p><p>Let x = array[0] and at each index (i) calculate x = max(x-1, array[i]).</p><p>If x = 0 at or before the end of the array then we know we won't make it and we should return false.</p><p>Following this recipe will get us an O(N) solution, which are normally ~10 lines of Python, but we can do it in just one line (32 characters!) of <a href="https://mlochbaum.github.io/BQN/index.html">BQN</a> (presumably, we could also do it in one line in most other array languages).</p><pre><code>Jumpgame ← {a← 0⊑𝕩 , (×´ {a ≤ 𝕩 ? a↩𝕩; a↩a-1}¨ 𝕩) ≢ 0}
 
-This proves deceptively difficult. Deceptive because the linear solution is (like most leetcode problems) simple. But if you haven't seen similair problems (or, you already know the "trick", in that case, shhh..) you're bound to waste valuable interview time teasing out the solution. But once it strikes you (or you look it up), you'll either kick yourself for missing something so obvious or pat yourself on the back for seeing through the interviewer's ruse.
-
-Here's the idea, it's a very basic dynamic programming solution:
-
-Let x = array[0] and at each index (i) calculate x = max(x-1, array[i]).
-
-If x = 0 at or before the end of the array then we know we won't make it and we should return false.
-
-Following this recipe will get us an O(N) solution, which are normally ~10 lines of Python, but we can do it in just one line (32 characters!) of [BQN](https://mlochbaum.github.io/BQN/index.html) (presumably, we could also do it in one line in most other array languages).
-
-```
-Jumpgame ← {a← 0⊑𝕩 , (×´ {a ≤ 𝕩 ? a↩𝕩; a↩a-1}¨ 𝕩) ≢ 0}
-
-```
-
-We can run this block as follows
-
-```
-Jumpgame ⟨0,2,1⟩
-->		 0
+</code></pre><p>We can run this block as follows</p><pre><code>Jumpgame ⟨0,2,1⟩
+-&gt;		 0
 Jumpgame ⟨ 2, 3, 1, 1, 4 ⟩
-->		 1 
-```
-
-BQN doesn't exactly have the boolean value types True and False, instead they're represented naturally by 1 and 0.
-
-BQN is interepreted from right to left, but I'll walk through the code from right to left.
-
-```
-Jumpgame ← {a← 0⊑𝕩 , 
-```
-
-We define Jumpgame as a block (which in this case, will behave as a function) that captures the value of the first index as the variable a, then we proceed to the second, inner block using the ',' seperator.
-
-```
-{a ≤ 𝕩 ? a↩𝕩; a↩a-1}¨ 𝕩
-```
-
-The inner block performs the algorithm discussed above. We use the previously defined variable a, and a variable that will be bound to the argument on the right side of the block, captured by 𝕩. The diaresis (¨) at the end of this block means "Each", resulting in the function being performed over each element , i.e., mapped over the given list. This results in a new array with the value max(x-1,array[i]) at each index i.
-
-```
-(×´ {a ≤ 𝕩 ? a↩𝕩; a↩a-1}¨ 𝕩) ≢ 0}
-```
-
-By product folding this array (x' means fold by multiplying each element the list with the next element) and comparing the result with 0, we get our answer - can we reach the end or not? 0 means that there's a 0 somewhere in the array, so, no we can't. 1 means yes we can reach the end.
-]]>
+-&gt;		 1 
+</code></pre><p>BQN doesn't exactly have the boolean value types True and False, instead they're represented naturally by 1 and 0.</p><p>BQN is interepreted from right to left, but I'll walk through the code from right to left.</p><pre><code>Jumpgame ← {a← 0⊑𝕩 , 
+</code></pre><p>We define Jumpgame as a block (which in this case, will behave as a function) that captures the value of the first index as the variable a, then we proceed to the second, inner block using the ',' seperator.</p><pre><code>{a ≤ 𝕩 ? a↩𝕩; a↩a-1}¨ 𝕩
+</code></pre><p>The inner block performs the algorithm discussed above. We use the previously defined variable a, and a variable that will be bound to the argument on the right side of the block, captured by 𝕩. The diaresis (¨) at the end of this block means "Each", resulting in the function being performed over each element , i.e., mapped over the given list. This results in a new array with the value max(x-1,array[i]) at each index i.</p><pre><code>(×´ {a ≤ 𝕩 ? a↩𝕩; a↩a-1}¨ 𝕩) ≢ 0}
+</code></pre><p>By product folding this array (x' means fold by multiplying each element the list with the next element) and comparing the result with 0, we get our answer - can we reach the end or not? 0 means that there's a 0 somewhere in the array, so, no we can't. 1 means yes we can reach the end.</p>         <footer>             Site proudly generated by rackle . <a href="../feed.rss">rss</a>         </footer>     </body> </html> ]]>
       </description>
     </item>
     <item>
@@ -76,30 +40,25 @@ By product folding this array (x' means fold by multiplying each element the lis
       <author>dave@dmetwo.org (Dave E.)</author>
       <guid isPermaLink="false">tag:dmetwo.org,2023:blog.A-Simple-C++-co-yield-Example</guid>
       <description>
-        <![CDATA[// A Simple C++ co-yield Example
-/*
-Coroutines, put succinctly, are functions that can be paused and resumed at user defined suspension points. This post is mostly concered with co_yield's functionality. I won't go into too much detail regarding the implementation and usage of coroutines in C++ in this post. You can check out [cpp_reference](https://en.cppreference.com/w/cpp/language/coroutines) or [lewis_baker's blog](https://lewissbaker.github.io/) for more details on that. co_yield() can be thought of as a light abstraction on co_await's functionality (see references and posts above). Calling co_yield is equivelant to calling co_await promise.yield_value(expr), which as you might suspect, yields a value.
+        <![CDATA[<!doctype html> <html lang="en">   <head>     <script type="text/javascript"
+src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML"></script> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css"> <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script> 
 
-So how do coroutines help us? In general, they provide a nice interface for functions that might require starting and stopping, with the function's state being maintained in between calls. Think of how a rendering callback might work in a game engine. At every iteration or tick, the rendering callback function is called which returns the necessary data (like object positions, lighting calculations, etc.) for drawing to a screen. With coroutines you could avoid writing the rendering code as callback functions and instead write the code as functions that (potentially) yield values.
+        <meta charset="utf-8">         <meta http-equiv="x-ua-compatible" content="ie=edge">         <meta name="viewport" content="width=device-width, initial-scale=1">         <title> Archives</title>         <link rel="stylesheet" href="../css/default.css" />     </head>     <body>         <header>             <div class="logo">                 <a href="../">~dave's blog~</a>             </div>             <nav>                  <a href="../index.html">home</a>                 <a href="../about.html">about</a>                 <a href="../archive.html">posts</a>             </nav>         </header><h1> A Simple C++ co-yield Example</h1><p></p><p>Coroutines, put succinctly, are functions that can be paused and resumed at user defined suspension points. This post is mostly concered with co_yield's functionality. I won't go into too much detail regarding the implementation and usage of coroutines in C++ in this post. You can check out <a href="https://en.cppreference.com/w/cpp/language/coroutines">cpp_reference</a> or <a href="https://lewissbaker.github.io/">lewis_baker's blog</a> for more details on that. co_yield() can be thought of as a light abstraction on co_await's functionality (see references and posts above). Calling co_yield is equivelant to calling co_await promise.yield_value(expr), which as you might suspect, yields a value.</p><p></p><p>So how do coroutines help us? In general, they provide a nice interface for functions that might require starting and stopping, with the function's state being maintained in between calls. Think of how a rendering callback might work in a game engine. At every iteration or tick, the rendering callback function is called which returns the necessary data (like object positions, lighting calculations, etc.) for drawing to a screen. With coroutines you could avoid writing the rendering code as callback functions and instead write the code as functions that (potentially) yield values.</p><p></p><p>In general the usual use cases for coroutines are asynchronous IO (networks, files, etc.) and generator functions (audio, images, etc.), which we'll be taking a look at soon.</p><p></p><p>The following example isn't perfect. It doesn't speed up execution nor does it improve readability very much, but it does show how coroutines (specifically lazy generators via co_yield) can be used. The following Generator struct is part of the compiler magic necessary to use coroutines in C++. Note - the struct's name doesn't necessarily have to be "Generator", it can be anything, "Generator" just aptly describes the type of function we'll be creating.</p><p> </p><pre><code>
+#include &lt;coroutine&gt;
+#include &lt;cstdio&gt;
+#include &lt;cstdint&gt;
+#include &lt;cstring&gt;
+#include &lt;exception&gt;
+#include &lt;iostream&gt;
+#include &lt;unistd.h&gt;
+#include &lt;utility&gt;
 
-In general the usual use cases for coroutines are asynchronous IO (networks, files, etc.) and generator functions (audio, images, etc.), which we'll be taking a look at soon.
-
-The following example isn't perfect. It doesn't speed up execution nor does it improve readability very much, but it does show how coroutines (specifically lazy generators via co_yield) can be used. The following Generator struct is part of the compiler magic necessary to use coroutines in C++. Note - the struct's name doesn't necessarily have to be "Generator", it can be anything, "Generator" just aptly describes the type of function we'll be creating.
- */
-#include <coroutine>
-#include <cstdio>
-#include <cstdint>
-#include <cstring>
-#include <exception>
-#include <iostream>
-#include <unistd.h>
-#include <utility>
-
-template <typename T>
+template &lt;typename T&gt;
 struct Generator {
   struct promise_type;
   // the handle is for suspending and resuming the coroutine
-  using handle_type = std::coroutine_handle<promise_type>;
+  using handle_type = std::coroutine_handle&lt;promise_type&gt;;
 
   // the promise type handles the returnable information for our coro
   struct promise_type {
@@ -119,9 +78,9 @@ struct Generator {
 	void unhandled_exception() { exception_ = std::current_exception(); }
 
 	// yields the value
-	template<std::convertible_to<T> From>
+	template&lt;std::convertible_to&lt;T&gt; From&gt;
 	std::suspend_always yield_value (From&& from) {
-	  val_ = std::forward<From>(from);
+	  val_ = std::forward&lt;From&gt;(from);
 	  return {};
 	}
 
@@ -140,19 +99,18 @@ struct Generator {
 	return std::move(h_.promise().val_); // return the data
   }
 };
-/*
-The following code calculates the donut's current frame. It's lifted directly from [here] (https://www.a1k0n.net/2021/01/13/optimizing-donut.html), with a nice explanation found [here](https://www.a1k0n.net/2011/07/20/donut-math.html) */
+</code></pre><p></p><p>The following code calculates the donut's current frame. It's lifted directly from <a href=" https://www.a1k0n.net/2021/01/13/optimizing-donut.html">here</a>, with a nice explanation found <a href="https://www.a1k0n.net/2011/07/20/donut-math.html">here</a> </p><pre><code>
 #define R(mul,shift,x,y) \
   _=x; \
-  x -= mul*y>>shift; \
-  y += mul*_>>shift; \
-  _ = 3145728-x*x-y*y>>11; \
-  x = x*_>>10; \
-  y = y*_>>10;
+  x -= mul*y&gt;&gt;shift; \
+  y += mul*_&gt;&gt;shift; \
+  _ = 3145728-x*x-y*y&gt;&gt;11; \
+  x = x*_&gt;&gt;10; \
+  y = y*_&gt;&gt;10;
 
 
-// N.B. Of type Generator<T>
-Generator<int8_t*>
+// N.B. Of type Generator&lt;T&gt;
+Generator&lt;int8_t*&gt;
 get_donut_frame() {
   int8_t b[1760], z[1760];
   int sA=1024,cA=0,sB=1024,cB=0,_;
@@ -160,28 +118,28 @@ get_donut_frame() {
     memset(b, 32, 1760);  // text buffer
     memset(z, 127, 1760);   // z buffer
     int sj=0, cj=1024;
-    for (int j = 0; j < 90; j++) {
+    for (int j = 0; j &lt; 90; j++) {
       int si = 0, ci = 1024;  // sine and cosine of angle i
-      for (int i = 0; i < 324; i++) {
+      for (int i = 0; i &lt; 324; i++) {
         int R1 = 1, R2 = 2048, K2 = 5120*1024;
 
         int x0 = R1*cj + R2,
-            x1 = ci*x0 >> 10,
-            x2 = cA*sj >> 10,
-            x3 = si*x0 >> 10,
-            x4 = R1*x2 - (sA*x3 >> 10),
-            x5 = sA*sj >> 10,
+            x1 = ci*x0 &gt;&gt; 10,
+            x2 = cA*sj &gt;&gt; 10,
+            x3 = si*x0 &gt;&gt; 10,
+            x4 = R1*x2 - (sA*x3 &gt;&gt; 10),
+            x5 = sA*sj &gt;&gt; 10,
             x6 = K2 + R1*1024*x5 + cA*x3,
-            x7 = cj*si >> 10,
+            x7 = cj*si &gt;&gt; 10,
             x = 40 + 30*(cB*x1 - sB*x4)/x6,
             y = 12 + 15*(cB*x4 + sB*x1)/x6,
-            N = (-cA*x7 - cB*((-sA*x7>>10) + x2) - ci*(cj*sB >> 10) >> 10) - x5 >> 7;
+            N = (-cA*x7 - cB*((-sA*x7&gt;&gt;10) + x2) - ci*(cj*sB &gt;&gt; 10) &gt;&gt; 10) - x5 &gt;&gt; 7;
 
         int o = x + 80 * y;
-        int8_t zz = (x6-K2)>>15;
-        if (22 > y && y > 0 && x > 0 && 80 > x && zz < z[o]) {
+        int8_t zz = (x6-K2)&gt;&gt;15;
+        if (22 &gt; y && y &gt; 0 && x &gt; 0 && 80 &gt; x && zz &lt; z[o]) {
           z[o] = zz;
-          b[o] = ".,-~:;=!*#$@"[N > 0 ? N : 0];
+          b[o] = ".,-~:;=!*#$@"[N &gt; 0 ? N : 0];
         }
         R(5, 8, ci, si)  // rotate i
       }
@@ -195,25 +153,20 @@ get_donut_frame() {
   }
 }
 
-/*
-The co_yield(b) call is the function's suspension point. co_yield suspends the function and returns (yields) the value we pass to it. In this case, we're passing a char array filled with the donut's current frame data. By invoking the generator (calling gen()), we cause the function to execute until the suspension point. Reinvoking the generator will cause the function to continue where it left off. Subsequent calls of gen() will result in the function executing the rest of the code starting at the end of the loop, iterating through the loop again and pausing at the suspension point.
- */
+</code></pre><p></p><p>The co_yield(b) call is the function's suspension point. co_yield suspends the function and returns (yields) the value we pass to it. In this case, we're passing a char array filled with the donut's current frame data. By invoking the generator (calling gen()), we cause the function to execute until the suspension point. Reinvoking the generator will cause the function to continue where it left off. Subsequent calls of gen() will result in the function executing the rest of the code starting at the end of the loop, iterating through the loop again and pausing at the suspension point.</p><p> </p><pre><code>
 
 int main() {
   auto gen = get_donut_frame();
   for(;;) {
 	auto b_ = gen();
-	for (int k = 0; 1761 > k; k++)
+	for (int k = 0; 1761 &gt; k; k++)
       putchar(k % 80 ? b_[k] : 10);
   }
 
   return 0;
 }
 
-/*
-In our main function we invoke the generator inside of an infinite for loop. Calling gen() yields our desired buffer which we then print out to the console. Resulting in a rotating donut being drawn on the screen.
- */
-]]>
+</code></pre><p></p><p>In our main function we invoke the generator inside of an infinite for loop. Calling gen() yields our desired buffer which we then print out to the console. Resulting in a rotating donut being drawn on the screen.</p><p> </p>         <footer>             Site proudly generated by rackle . <a href="../feed.rss">rss</a>         </footer>     </body> </html> ]]>
       </description>
     </item>
   </channel>
