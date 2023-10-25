@@ -7,8 +7,10 @@
 ;;   [] copy over css
 ;;   [] dir path list function
 ;;   [x] add date parsing to titles
-;;   [] fix rss generation
+;;   [x] fix rss generation
 ;;   [] fix site cache functionality
+;;   [] add date info to posts
+;;   [] add tags
 
 #lang racket
 (require racket/cmdline)
@@ -393,7 +395,7 @@ src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX
 (define (create-site in-path config)
   (define diff (check-diff (string->path in-path)))
   (copy-files (string->path in-path))
-  (build-file-date-map diff)
+  (build-file-date-map (get-draft-posts (string->path in-path)))
   (create-posts   (string->path in-path) diff)
   (create-about   (string->path in-path))
   (create-index   (string->path in-path))
