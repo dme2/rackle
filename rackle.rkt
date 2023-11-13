@@ -11,6 +11,7 @@
 ;;   [] fix site cache functionality
 ;;   [] add date info to posts
 ;;   [] add tags
+;    [] fix titles
 
 #lang racket
 (require racket/cmdline)
@@ -43,7 +44,6 @@
         <meta charset=\"utf-8\"> \
         <meta http-equiv=\"x-ua-compatible\" content=\"ie=edge\"> \
         <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"> \
-        <title> Archives</title> \
         <link rel=\"stylesheet\" href=\"./css/default.css\" /> \
     </head> \
     <body> \
